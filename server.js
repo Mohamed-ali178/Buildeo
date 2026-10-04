@@ -1,6 +1,7 @@
 const http = require("http");
 const https = require("https");
 const fs = require("fs");
+const net = require("net");
 const os = require("os");
 const path = require("path");
 const crypto = require("crypto");
@@ -326,24 +327,67 @@ function smtpFromHeader(config) {
   return `"${name}" <${email}>`;
 }
 
-async function sendSmtp(config, to, subject, text) {
+function openSmtpSocket(host, port) {
+  if (Number(port) === 587) {
+    return new Promise((resolve, reject) => {
+      const raw = net.connect(587, host);
+      raw.setTimeout(20000);
+      raw.once("connect", () => resolve(raw));
+      raw.once("error", reject);
+      raw.once("timeout", () => {
+        raw.destroy();
+        reject(new Error("smtp timeout"));
+      });
+    });
+  }
+  return new Promise((resolve, reject) => {
+    const socket = tls.connect(Number(port) || 465, host, { servername: host });
+    socket.setTimeout(20000);
+    socket.once("secureConnect", () => resolve(socket));
+    socket.once("error", reject);
+    socket.once("timeout", () => {
+      socket.destroy();
+      reject(new Error("smtp timeout"));
+    });
+  });
+}
+
+async function upgradeToTls(socket, host) {
+  return new Promise((resolve, reject) => {
+    const secure = tls.connect({ socket, servername: host });
+    secure.setTimeout(20000);
+    secure.once("secureConnect", () => resolve(secure));
+    secure.once("error", reject);
+    secure.once("timeout", () => {
+      secure.destroy();
+      reject(new Error("smtp timeout"));
+    });
+  });
+}
+
+async function sendSmtp(config, to, subject, text, port = config.port) {
   const host = config.host;
-  const port = Number(config.port || 465);
-  const user = config.user;
+  const user = String(config.user || "").trim();
   const pass = String(config.pass || "").replace(/\s+/g, "");
   const fromEmail = smtpFromEmail(config);
   if (!host || !user || !pass) throw new Error("smtp missing");
-  const socket = tls.connect(port, host, { servername: host });
-  const smtp = attachSmtp(socket);
-  await new Promise((resolve, reject) => {
-    socket.once("secureConnect", resolve);
-    socket.once("error", reject);
-  });
+  let socket = await openSmtpSocket(host, port);
+  let smtp = attachSmtp(socket);
   const greet = await smtp.expect();
   if (greet.code !== "220") throw new Error(greet.buf);
-  socket.write("EHLO buildeo.local\r\n");
+  socket.write("EHLO buildeo.app\r\n");
   const ehlo = await smtp.expect();
   if (ehlo.code !== "250") throw new Error(ehlo.buf);
+  if (Number(port) === 587) {
+    socket.write("STARTTLS\r\n");
+    const start = await smtp.expect();
+    if (start.code !== "220") throw new Error(start.buf);
+    socket = await upgradeToTls(socket, host);
+    smtp = attachSmtp(socket);
+    socket.write("EHLO buildeo.app\r\n");
+    const ehlo2 = await smtp.expect();
+    if (ehlo2.code !== "250") throw new Error(ehlo2.buf);
+  }
   socket.write("AUTH LOGIN\r\n");
   const auth = await smtp.expect();
   if (auth.code !== "334") throw new Error(auth.buf);
@@ -352,7 +396,7 @@ async function sendSmtp(config, to, subject, text) {
   if (userRes.code !== "334") throw new Error(userRes.buf);
   socket.write(`${Buffer.from(pass).toString("base64")}\r\n`);
   const passRes = await smtp.expect();
-  if (passRes.code !== "235") throw new Error(passRes.buf);
+  if (passRes.code !== "235") throw new Error(passRes.buf.slice(0, 80));
   socket.write(`MAIL FROM:<${fromEmail}>\r\n`);
   const mailFrom = await smtp.expect();
   if (mailFrom.code !== "250") throw new Error(mailFrom.buf);
@@ -388,12 +432,17 @@ async function sendVerificationEmail(user, code, lang) {
   const errors = [];
 
   if (config.smtp?.host && config.smtp?.user && config.smtp?.pass) {
-    try {
-      await sendSmtp(config.smtp, user.email, subject, text);
-      return "smtp";
-    } catch (err) {
-      errors.push(`smtp:${err.message}`);
+    const ports = [Number(config.smtp.port || 465), 587];
+    for (const port of [...new Set(ports)]) {
+      try {
+        await sendSmtp(config.smtp, user.email, subject, text, port);
+        return "smtp";
+      } catch (err) {
+        errors.push(`smtp:${port}:${String(err.message || err).slice(0, 120)}`);
+      }
     }
+  } else {
+    errors.push("smtp:not-configured");
   }
 
   if (config.resendApiKey) {
@@ -483,7 +532,16 @@ function consumeCode(user, code) {
 
 async function handleApi(req, res, url) {
   if (url.pathname === "/api/health" && req.method === "GET") {
-    return json(res, 200, { ok: true });
+    const smtp = loadConfig().smtp || {};
+    return json(res, 200, {
+      ok: true,
+      smtp: {
+        host: !!smtp.host,
+        user: !!smtp.user,
+        pass: !!smtp.pass,
+        from: !!smtpFromEmail(smtp),
+      },
+    });
   }
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
@@ -744,7 +802,9 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
   for (const url of lanUrls()) console.log(url);
   const cfg = loadConfig();
-  if (!cfg.smtp?.pass) {
-    console.warn("Buildeo: mot de passe SMTP vide — les codes ne partiront pas par Gmail tant que email-config.json n’a pas le mot de passe d’application.");
+  const smtp = cfg.smtp || {};
+  console.log(`SMTP host=${smtp.host ? "yes" : "no"} user=${smtp.user ? "yes" : "no"} pass=${smtp.pass ? "yes" : "no"}`);
+  if (!smtp.host || !smtp.user || !smtp.pass) {
+    console.warn("Buildeo: SMTP incomplet — remplis SMTP_HOST, SMTP_USER, SMTP_PASS sur l’hébergeur.");
   }
 });
