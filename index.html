@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1a2332" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Buildeo" />
+    <title>Buildeo</title>
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./icons/icon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./styles.css?v=51" />
+  </head>
+  <body>
+    <div id="auth-screen" class="auth-screen">
+      <div class="auth-card">
+        <img class="auth-logo" src="./icons/icon.png" alt="" />
+        <h1>Buildeo</h1>
+        <p class="auth-sub" data-i18n="brand.subtitle">Gestion de chantiers</p>
+        <div class="auth-tabs" id="auth-tabs">
+          <button type="button" class="btn ghost" id="auth-tab-login" data-i18n="auth.login">Connexion</button>
+          <button type="button" class="btn ghost" id="auth-tab-register" data-i18n="auth.register">S’enregistrer</button>
+        </div>
+        <p id="auth-error" class="auth-error hidden"></p>
+        <form id="form-auth">
+          <div id="auth-register-fields" class="hidden">
+            <div class="auth-photo">
+              <div class="auth-avatar-wrap">
+                <img id="auth-photo-preview" class="hidden" alt="" />
+                <span id="auth-photo-initials" class="avatar-initials">?</span>
+              </div>
+              <span class="label" data-i18n="auth.photo">Photo de profil (facultatif)</span>
+              <p class="auth-hint" data-i18n="auth.photoHint">Sans photo, tes initiales s’affichent</p>
+              <div class="auth-photo-actions">
+                <label class="btn ghost auth-file-btn"><span data-i18n="btn.uploadPhoto">Télécharger</span><input id="auth-photo-file" type="file" accept="image/*" hidden /></label>
+                <label class="btn ghost auth-file-btn"><span data-i18n="btn.takePhoto">Prendre une photo</span><input id="auth-photo-cam" type="file" accept="image/*" capture="user" hidden /></label>
+              </div>
+            </div>
+            <div class="auth-row">
+              <label><span data-i18n="auth.firstname">Prénom</span><input name="prenom" autocomplete="given-name" /></label>
+              <label><span data-i18n="auth.lastname">Nom</span><input name="nom" autocomplete="family-name" /></label>
+            </div>
+            <label><span data-i18n="auth.username">Nom d’utilisateur</span><input name="username" autocomplete="username" /></label>
+            <label>
+              <span data-i18n="auth.phone">Téléphone</span>
+              <div class="phone-row">
+                <select name="countryCode" id="auth-country" aria-label="Indicatif">
+                  <option value="+33">🇫🇷 +33 France</option>
+                  <option value="+1">🇺🇸 +1 USA</option>
+                  <option value="+49">🇩🇪 +49 Allemagne</option>
+                </select>
+                <input name="telephone" type="tel" autocomplete="tel" />
+              </div>
+            </label>
+            <label>
+              <span data-i18n="auth.poste">Poste</span>
+              <input name="poste" list="postes-list" />
+              <datalist id="postes-list">
+                <option value="Ingénieur travaux"></option>
+                <option value="Conducteur de travaux"></option>
+                <option value="Responsable"></option>
+                <option value="Chef de chantier"></option>
+                <option value="Technicien"></option>
+              </datalist>
+            </label>
+            <label><span data-i18n="auth.company">Entreprise</span><input name="entreprise" /></label>
+            <label><span data-i18n="auth.email">E-mail</span><input name="email" type="email" autocomplete="email" /></label>
+          </div>
+          <label id="auth-login-wrap"><span data-i18n="auth.loginId">E-mail ou nom d’utilisateur</span><input name="login" autocomplete="username" /></label>
+          <label id="auth-password-wrap"><span data-i18n="auth.password">Mot de passe</span>
+            <div class="password-field">
+              <input name="password" type="password" required autocomplete="current-password" />
+              <button type="button" class="toggle-pass" data-toggle-pass aria-label="Afficher le mot de passe">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </label>
+          <label id="auth-confirm-wrap" class="hidden"><span data-i18n="auth.confirm">Confirmer le mot de passe</span>
+            <div class="password-field">
+              <input name="confirm" type="password" autocomplete="new-password" />
+              <button type="button" class="toggle-pass" data-toggle-pass aria-label="Afficher le mot de passe">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </label>
+          <label class="check-row auth-remember">
+            <input type="checkbox" id="auth-remember" checked />
+            <span data-i18n="auth.remember">Enregistrer ce compte sur cet appareil</span>
+          </label>
+          <button type="submit" class="btn primary" id="auth-submit" data-i18n="auth.enter">Entrer</button>
+          <button type="button" class="btn-link" id="btn-forgot" data-i18n="auth.forgot">Mot de passe oublié ?</button>
+        </form>
+        <form id="form-forgot" class="hidden">
+          <label><span data-i18n="auth.email">E-mail</span><input name="email" type="email" required autocomplete="email" /></label>
+          <button type="submit" class="btn primary" data-i18n="auth.forgot.submit">Envoyer le code</button>
+          <button type="button" class="btn ghost" id="btn-forgot-back" data-i18n="auth.back">Retour</button>
+        </form>
+        <div id="auth-verify" class="auth-verify hidden">
+          <p id="auth-verify-lead" class="auth-sub"></p>
+          <p id="auth-display-code" class="auth-code-box hidden"></p>
+          <label><span data-i18n="auth.code">Code à 6 chiffres</span><input id="auth-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" /></label>
+          <div id="auth-reset-fields" class="hidden">
+            <label><span data-i18n="auth.newPassword">Nouveau mot de passe</span>
+              <div class="password-field">
+                <input id="auth-new-pass" type="password" autocomplete="new-password" />
+                <button type="button" class="toggle-pass" data-toggle-pass aria-label="Afficher le mot de passe">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </label>
+            <label><span data-i18n="auth.confirm">Confirmer le mot de passe</span>
+              <div class="password-field">
+                <input id="auth-new-confirm" type="password" autocomplete="new-password" />
+                <button type="button" class="toggle-pass" data-toggle-pass aria-label="Afficher le mot de passe">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </label>
+          </div>
+          <button type="button" class="btn primary" id="btn-verify" data-i18n="auth.verify.submit">Vérifier l’e-mail</button>
+          <button type="button" class="btn ghost" id="btn-resend" data-i18n="auth.resend">Renvoyer le code</button>
+          <button type="button" class="btn ghost" id="btn-auth-back" data-i18n="auth.back">Retour</button>
+        </div>
+      </div>
+    </div>
+    <div class="app hidden">
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="brand-mark" src="./icons/icon.png" alt="" />
+          <div>
+            <strong>Buildeo</strong>
+            <small data-i18n="brand.subtitle">Gestion de chantiers</small>
+          </div>
+        </div>
+        <div id="sidebar-hello" class="sidebar-hello"></div>
+        <button type="button" class="btn ghost" id="btn-logout" data-i18n="btn.logout">Déconnexion</button>
+        <nav class="nav">
+          <button class="nav-btn cat active" data-view="dashboard" data-i18n="nav.home">Accueil</button>
+          <button class="nav-btn cat" data-view="chantiers" data-i18n="nav.chantier">Mes chantiers</button>
+          <button class="nav-btn cat" data-view="livraison" data-i18n="nav.livraison">Livraison</button>
+          <button class="nav-btn cat" data-view="cr" data-i18n="nav.cr">Compte rendu</button>
+          <button class="nav-btn cat" data-view="galerie" data-i18n="nav.galerie">Galerie</button>
+          <button class="nav-btn cat" data-view="sousTraitants" data-i18n="nav.sousTraitants">Sous-traitants</button>
+          <button class="nav-btn cat" data-view="calendrier" data-i18n="nav.calendrier">Planning</button>
+          <button class="nav-btn cat" data-view="devis" data-i18n="nav.devis">Devis</button>
+          <button class="nav-btn cat" data-view="suivi" data-i18n="nav.suivi">Suivi / avancement</button>
+          <button class="nav-btn cat" data-view="historique" data-i18n="nav.historique">Historique</button>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <h1 id="page-title">Accueil</h1>
+          <input id="search" type="search" data-i18n-placeholder="search.placeholder" placeholder="Rechercher…" />
+        </header>
+
+        <section id="view-dashboard" class="view">
+          <div class="prefs home-prefs">
+            <label>
+              <span data-i18n="prefs.language">Langue</span>
+              <select id="select-lang">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="prefs.theme">Interface</span>
+              <select id="select-theme">
+                <option value="dark" data-i18n="prefs.themeDark">Sombre (actuel)</option>
+                <option value="light" data-i18n="prefs.themeLight">Clair (blanc)</option>
+              </select>
+            </label>
+          </div>
+          <div id="accueil-body"></div>
+        </section>
+        <section id="view-chantiers" class="view hidden"></section>
+        <section id="view-livraison" class="view hidden"></section>
+        <section id="view-cr" class="view hidden"></section>
+        <section id="view-galerie" class="view hidden"></section>
+        <section id="view-finance" class="view hidden"></section>
+        <section id="view-sousTraitants" class="view hidden"></section>
+        <section id="view-calendrier" class="view hidden"></section>
+        <section id="view-devis" class="view hidden"></section>
+        <section id="view-suivi" class="view hidden"></section>
+        <section id="view-historique" class="view hidden"></section>
+        <section id="view-detail" class="view hidden"></section>
+      </main>
+    </div>
+
+    <dialog id="dialog-chantier">
+      <form method="dialog" id="form-chantier">
+        <h2 id="dialog-chantier-title" data-i18n="dialog.siteNew">Nouveau chantier</h2>
+        <input type="hidden" name="id" />
+        <label><span data-i18n="field.siteName">Nom du chantier</span><input name="nom" required /></label>
+        <label><span data-i18n="field.client">Client</span><input name="client" required /></label>
+        <label><span data-i18n="field.address">Adresse</span><input name="adresse" /></label>
+        <div class="row">
+          <label><span data-i18n="field.start">Début</span><input name="debut" type="date" /></label>
+          <label><span data-i18n="field.end">Fin prévue</span><input name="fin" type="date" /></label>
+        </div>
+        <div class="row">
+          <label>
+            <span data-i18n="field.status">Statut</span>
+            <select name="statut">
+              <option value="preparation" data-i18n="status.preparation">Préparation</option>
+              <option value="en_cours" data-i18n="status.en_cours">En cours</option>
+              <option value="pause" data-i18n="status.pause">En pause</option>
+              <option value="termine" data-i18n="status.termine">Terminé</option>
+            </select>
+          </label>
+          <label><span data-i18n="field.budget">Budget (€)</span><input name="budget" type="number" min="0" step="100" /></label>
+        </div>
+        <label><span data-i18n="field.notes">Notes</span><textarea name="notes" rows="3"></textarea></label>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-chantier" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.save">Enregistrer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-tache">
+      <form method="dialog" id="form-tache">
+        <h2 id="dialog-tache-title" data-i18n="dialog.taskNew">Nouvelle tâche</h2>
+        <input type="hidden" name="id" />
+        <label><span data-i18n="field.title">Titre</span><input name="titre" required /></label>
+        <label><span data-i18n="field.site">Chantier</span><select name="chantierSelect"></select></label>
+        <div class="row">
+          <label><span data-i18n="field.due">Échéance</span><input name="echeance" type="date" /></label>
+          <label>
+            <span data-i18n="field.priority">Priorité</span>
+            <select name="priorite">
+              <option value="normale" data-i18n="priority.normale">Normale</option>
+              <option value="haute" data-i18n="priority.haute">Haute</option>
+              <option value="critique" data-i18n="priority.critique">Critique</option>
+            </select>
+          </label>
+        </div>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-tache" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" id="btn-save-tache" data-i18n="btn.add">Ajouter</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-membre">
+      <form method="dialog" id="form-membre">
+        <h2 data-i18n="dialog.memberNew">Nouveau membre</h2>
+        <label><span data-i18n="field.name">Nom</span><input name="nom" required /></label>
+        <label>
+          <span data-i18n="field.poste">Poste</span>
+          <select name="poste">
+            <option value="membre" data-i18n="poste.membre">Membre d’équipe</option>
+            <option value="chef" data-i18n="poste.chef">Chef de chantier</option>
+          </select>
+        </label>
+        <label><span data-i18n="field.phone">Téléphone</span><input name="tel" type="tel" required /></label>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-membre" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.add">Ajouter</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-event">
+      <form method="dialog" id="form-event">
+        <h2 data-i18n="dialog.eventNew">Nouvel événement</h2>
+        <label><span data-i18n="field.title">Titre</span><input name="titre" required /></label>
+        <label>
+          <span data-i18n="field.eventType">Type</span>
+          <select name="type">
+            <option value="reunion" data-i18n="event.reunion">Réunion de chantier</option>
+            <option value="commande" data-i18n="event.commande">Commande de matériel</option>
+            <option value="mail" data-i18n="event.mail">Envoi d’e-mail</option>
+            <option value="visite" data-i18n="event.visite">Visite de chantier</option>
+            <option value="autre" data-i18n="event.autre">Autre</option>
+          </select>
+        </label>
+        <div class="row">
+          <label><span data-i18n="field.date">Date</span><input name="date" type="date" required /></label>
+          <label><span data-i18n="field.time">Heure</span><input name="heure" type="time" required /></label>
+        </div>
+        <label><span data-i18n="field.siteOptional">Chantier (optionnel)</span><select name="chantierId"></select></label>
+        <label><span data-i18n="field.notes">Notes</span><textarea name="notes" rows="2"></textarea></label>
+        <label>
+          <span data-i18n="field.eventSound">Son de la notification</span>
+          <select name="son">
+            <option value="chime" data-i18n="sound.chime">Carillon</option>
+            <option value="beep" data-i18n="sound.beep">Bip</option>
+            <option value="urgent" data-i18n="sound.urgent">Urgent</option>
+            <option value="off" data-i18n="sound.off">Sans son</option>
+          </select>
+        </label>
+        <button type="button" class="btn ghost" id="btn-test-event-sound" data-i18n="btn.testSound">Tester le son</button>
+        <fieldset class="questions">
+          <legend data-i18n="field.alerts">Alertes</legend>
+          <div id="alertes-list"></div>
+          <button type="button" class="btn ghost" id="btn-add-alerte" data-i18n="btn.addAlert">+ Ajouter une alerte</button>
+        </fieldset>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-event" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.save">Enregistrer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-probleme">
+      <form method="dialog" id="form-probleme">
+        <h2 data-i18n="dialog.issueNew">Problème / tâche bloquée</h2>
+        <label><span data-i18n="field.title">Titre</span><input name="titre" required /></label>
+        <label><span data-i18n="field.description">Description</span><textarea name="description" rows="3" required></textarea></label>
+        <label><span data-i18n="field.action">Action prévue</span><textarea name="action" rows="2" required></textarea></label>
+        <label>
+          <span data-i18n="field.hasDue">Y a-t-il une échéance ?</span>
+          <select name="hasEcheance" id="probleme-has-echeance">
+            <option value="non" data-i18n="due.no">Non</option>
+            <option value="oui" data-i18n="due.yes">Oui</option>
+          </select>
+        </label>
+        <label id="probleme-echeance-wrap" class="hidden">
+          <span data-i18n="field.due">Échéance</span>
+          <input name="echeance" type="date" />
+        </label>
+        <fieldset class="questions">
+          <legend data-i18n="field.photo">Photo</legend>
+          <div class="photo-actions">
+            <label class="icon-btn" title="Télécharger">
+              <input id="probleme-photo-file" type="file" accept="image/*" hidden />
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm1 15H9v-2h6zm0-4H9v-2h6zm-2-5V3.5L18.5 8z"/></svg>
+              <span data-i18n="btn.uploadPhoto">Télécharger</span>
+            </label>
+            <label class="icon-btn" title="Appareil photo">
+              <input id="probleme-photo-cam" type="file" accept="image/*" capture="environment" hidden />
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2z"/></svg>
+              <span data-i18n="btn.takePhoto">Prendre une photo</span>
+            </label>
+          </div>
+          <img id="probleme-preview" class="photo-preview hidden" alt="" />
+        </fieldset>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-probleme" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.add">Ajouter</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-livraison">
+      <form method="dialog" id="form-livraison">
+        <h2 data-i18n="dialog.livraisonNew">Nouvelle livraison</h2>
+        <label><span data-i18n="field.site">Chantier</span><select name="chantierId" required></select></label>
+        <label><span data-i18n="field.title">Titre</span><input name="titre" required /></label>
+        <label><span data-i18n="field.fournisseur">Fournisseur</span><input name="fournisseur" /></label>
+        <label>
+          <span data-i18n="field.orderDate">Commande à faire pour le</span>
+          <div class="date-row">
+            <input name="dateCommande" type="date" required />
+            <button type="button" class="cal-icon-btn" data-open-date title="Calendrier">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            </button>
+          </div>
+        </label>
+        <label><span data-i18n="field.detail">Détail de la commande</span><textarea name="notes" rows="3"></textarea></label>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-livraison" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.add">Ajouter</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-liv-arrivee">
+      <form method="dialog" id="form-liv-arrivee">
+        <h2 data-i18n="dialog.livArrivee">Date de livraison prévue</h2>
+        <p id="liv-arrivee-lead" class="auth-sub"></p>
+        <input type="hidden" name="livraisonId" />
+        <label>
+          <span data-i18n="field.arrivalDate">Date de livraison prévue</span>
+          <div class="date-row">
+            <input name="dateArrivee" type="date" required />
+            <button type="button" class="cal-icon-btn" data-open-date title="Calendrier">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            </button>
+          </div>
+        </label>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-liv-arrivee" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.save">Enregistrer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-finance">
+      <form method="dialog" id="form-finance">
+        <h2 data-i18n="dialog.financeNew">Nouvelle ligne financière</h2>
+        <label><span data-i18n="field.site">Chantier</span><select name="chantierId" required></select></label>
+        <label>
+          <span data-i18n="field.type">Type</span>
+          <select name="type">
+            <option value="depense" data-i18n="fin.depense">Dépense</option>
+            <option value="recette" data-i18n="fin.recette">Recette</option>
+          </select>
+        </label>
+        <label><span data-i18n="field.libelle">Libellé</span><input name="libelle" required /></label>
+        <div class="row">
+          <label><span data-i18n="field.montant">Montant (€)</span><input name="montant" type="number" min="0" step="0.01" required /></label>
+          <label><span data-i18n="field.date">Date</span><input name="date" type="date" required /></label>
+        </div>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-finance" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.add">Ajouter</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-devis" class="wide devis-dialog">
+      <form method="dialog" id="form-devis">
+        <h2 id="dialog-devis-title" data-i18n="dialog.devisNew">Nouveau devis</h2>
+        <input type="hidden" name="id" />
+        <label><span data-i18n="field.site">Chantier</span><select name="chantierId" required></select></label>
+        <label><span data-i18n="field.title">Titre</span><input name="titre" required /></label>
+        <div class="row">
+          <label><span data-i18n="field.client">Client</span><input name="client" /></label>
+          <label>
+            <span data-i18n="field.date">Date</span>
+            <div class="date-row">
+              <input name="date" type="date" required />
+              <button type="button" class="cal-icon-btn" data-open-date title="Calendrier">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+              </button>
+            </div>
+          </label>
+        </div>
+        <div class="devis-table-wrap">
+          <table class="devis-table">
+            <thead>
+              <tr>
+                <th data-i18n="devis.col.designation">Désignation</th>
+                <th data-i18n="devis.col.qty">Qté</th>
+                <th data-i18n="devis.col.unit">Unité</th>
+                <th data-i18n="devis.col.pu">Pu HT €</th>
+                <th data-i18n="devis.col.total">Total HT €</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="devis-lignes"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" data-i18n="devis.totalHt">Total HT</td>
+                <td id="devis-total">0,00 €</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          <div class="devis-table-actions">
+            <button type="button" class="btn ghost" id="btn-add-devis-ligne" data-i18n="devis.addLine">+ Ligne</button>
+            <button type="button" class="btn ghost" id="btn-add-devis-titre" data-i18n="devis.addTitle">+ Titre de lot</button>
+          </div>
+        </div>
+        <label><span data-i18n="field.notes">Notes</span><textarea name="notes" rows="2"></textarea></label>
+        <div id="devis-trace" class="devis-trace hidden"></div>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-devis" data-i18n="btn.cancel">Annuler</button>
+          <button type="button" class="btn ghost hidden" id="btn-pdf-devis-dialog" data-i18n="btn.pdf">Télécharger PDF</button>
+          <button value="save" class="btn primary" id="btn-save-devis" data-i18n="btn.add">Ajouter</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-devis-preuve">
+      <form method="dialog" id="form-devis-preuve">
+        <h2 data-i18n="devis.dialogPreuve">Classer la validation client</h2>
+        <input type="hidden" name="id" />
+        <label>
+          <span data-i18n="devis.validated">Validé par le client</span>
+          <div class="date-row">
+            <input name="valideeLe" type="date" required />
+            <button type="button" class="cal-icon-btn" data-open-date title="Calendrier">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            </button>
+          </div>
+        </label>
+        <label>
+          <span data-i18n="devis.preuveFile">Devis signé / retour du client (photo ou PDF)</span>
+          <input name="fichier" type="file" accept="image/*,application/pdf" required />
+        </label>
+        <label><span data-i18n="devis.preuveNote">Comment tu l’as reçu</span><input name="preuveNote" placeholder="mail, WhatsApp, papier signé…" /></label>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-preuve" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.save">Enregistrer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-devis-apply">
+      <form method="dialog" id="form-devis-apply">
+        <h2 data-i18n="devis.apply.title">Créer à partir du devis</h2>
+        <p id="devis-apply-lead" class="auth-sub"></p>
+        <input type="hidden" name="id" />
+        <p id="devis-apply-error" class="auth-error hidden"></p>
+        <label class="check-row">
+          <input type="checkbox" name="wantCommande" />
+          <span id="devis-apply-commande-label"></span>
+        </label>
+        <label id="devis-apply-commande-date-wrap">
+          <span data-i18n="devis.apply.commandeDate">Planifier la commande pour le</span>
+          <div class="date-row">
+            <input name="commandeDate" type="date" />
+            <button type="button" class="cal-icon-btn" data-open-date title="Calendrier">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            </button>
+          </div>
+        </label>
+        <label class="check-row">
+          <input type="checkbox" name="wantTasks" />
+          <span id="devis-apply-tasks-label"></span>
+        </label>
+        <label id="devis-apply-date-wrap">
+          <span data-i18n="devis.apply.taskDate">Planifier les tâches pour le</span>
+          <div class="date-row">
+            <input name="tacheDate" type="date" />
+            <button type="button" class="cal-icon-btn" data-open-date title="Calendrier">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            </button>
+          </div>
+        </label>
+        <label class="check-row hidden">
+          <input type="checkbox" name="wantFinance" />
+          <span id="devis-apply-finance-label"></span>
+        </label>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-apply" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="devis.apply.submit">Créer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-st">
+      <form method="dialog" id="form-st">
+        <h2 data-i18n="dialog.stNew">Entreprise sous-traitante</h2>
+        <label><span data-i18n="field.company">Entreprise</span><input name="nom" required /></label>
+        <label><span data-i18n="field.metier">Métier / lot</span><input name="metier" required /></label>
+        <label><span data-i18n="field.phone">Téléphone</span><input name="tel" type="tel" /></label>
+        <label><span data-i18n="field.site">Chantier</span><select name="chantierId" required></select></label>
+        <fieldset class="questions">
+          <legend data-i18n="field.responsables">Responsables</legend>
+          <div id="st-resp-list"></div>
+          <button type="button" class="btn ghost" id="btn-add-st-resp" data-i18n="btn.addResp">+ Ajouter une personne</button>
+        </fieldset>
+        <fieldset class="questions">
+          <legend data-i18n="field.logo">Logo de l’entreprise (optionnel)</legend>
+          <div class="photo-actions">
+            <label class="icon-btn">
+              <input id="st-logo-file" type="file" accept="image/*" hidden />
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm1 15H9v-2h6zm0-4H9v-2h6zm-2-5V3.5L18.5 8z"/></svg>
+              <span data-i18n="btn.uploadPhoto">Télécharger</span>
+            </label>
+          </div>
+          <img id="st-logo-preview" class="photo-preview hidden" alt="" />
+        </fieldset>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-st" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.add">Ajouter</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-contact">
+      <form method="dialog" id="form-contact">
+        <h2 data-i18n="dialog.contactNew">Personne à contacter</h2>
+        <label><span data-i18n="field.name">Nom</span><input name="nom" required /></label>
+        <label><span data-i18n="field.role">Rôle</span><input name="role" /></label>
+        <label><span data-i18n="field.phone">Téléphone</span><input name="tel" type="tel" required /></label>
+        <label><span data-i18n="field.email">E-mail</span><input name="email" type="email" /></label>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-contact" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.add">Ajouter</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-visite" class="wide">
+      <form method="dialog" id="form-visite">
+        <h2 data-i18n="dialog.visitNew">Visite de chantier</h2>
+        <input type="hidden" name="visitId" />
+        <div class="row">
+          <label><span data-i18n="field.date">Date</span><input name="date" type="date" required /></label>
+          <label><span data-i18n="field.time">Heure</span><input name="heure" type="time" required /></label>
+        </div>
+        <fieldset class="questions">
+          <legend data-i18n="field.presents">Personnes présentes</legend>
+          <div id="presents-list"></div>
+          <button type="button" class="btn ghost" id="btn-add-present" data-i18n="btn.addPresent">+ Ajouter une personne</button>
+        </fieldset>
+        <fieldset class="questions">
+          <legend data-i18n="field.photos">Photos</legend>
+          <div class="photo-actions">
+            <label class="icon-btn" title="Télécharger">
+              <input id="visite-photo-file" type="file" accept="image/*" hidden />
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm1 15H9v-2h6zm0-4H9v-2h6zm-2-5V3.5L18.5 8z"/></svg>
+              <span data-i18n="btn.uploadPhoto">Télécharger</span>
+            </label>
+            <label class="icon-btn" title="Appareil photo">
+              <input id="visite-photo-cam" type="file" accept="image/*" capture="environment" hidden />
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2z"/></svg>
+              <span data-i18n="btn.takePhoto">Prendre une photo</span>
+            </label>
+          </div>
+          <div id="visite-photos" class="photo-thumbs"></div>
+        </fieldset>
+        <fieldset class="questions">
+          <legend data-i18n="visit.questions">Compte rendu — questions</legend>
+          <label>
+            <span data-i18n="q.securite">Accès et sécurité conformes ?</span>
+            <select name="q_securite">
+              <option value="oui" data-i18n="ans.yes">Oui</option>
+              <option value="partiel" data-i18n="ans.partial">Partiel</option>
+              <option value="non" data-i18n="ans.no">Non</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="q.epi">Port des EPI respecté ?</span>
+            <select name="q_epi">
+              <option value="oui" data-i18n="ans.yes">Oui</option>
+              <option value="partiel" data-i18n="ans.partial">Partiel</option>
+              <option value="non" data-i18n="ans.no">Non</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="q.planning">Avancement conforme au planning ?</span>
+            <select name="q_planning">
+              <option value="oui" data-i18n="ans.yes">Oui</option>
+              <option value="partiel" data-i18n="ans.partial">Partiel</option>
+              <option value="non" data-i18n="ans.no">Non</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="q.qualite">Qualité d’exécution acceptable ?</span>
+            <select name="q_qualite">
+              <option value="oui" data-i18n="ans.yes">Oui</option>
+              <option value="partiel" data-i18n="ans.partial">Partiel</option>
+              <option value="non" data-i18n="ans.no">Non</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="q.proprete">Propreté et stockage OK ?</span>
+            <select name="q_proprete">
+              <option value="oui" data-i18n="ans.yes">Oui</option>
+              <option value="partiel" data-i18n="ans.partial">Partiel</option>
+              <option value="non" data-i18n="ans.no">Non</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="q.materiel">Matériel / livraisons OK ?</span>
+            <select name="q_materiel">
+              <option value="oui" data-i18n="ans.yes">Oui</option>
+              <option value="partiel" data-i18n="ans.partial">Partiel</option>
+              <option value="non" data-i18n="ans.no">Non</option>
+            </select>
+          </label>
+          <label><span data-i18n="q.entreprises">Entreprises présentes</span><input name="q_entreprises" /></label>
+          <label><span data-i18n="q.meteo">Conditions météo</span><input name="q_meteo" /></label>
+          <label><span data-i18n="q.constats">Problèmes constatés</span><textarea name="q_constats" rows="2"></textarea></label>
+          <label><span data-i18n="q.actions">Décisions / actions à suivre</span><textarea name="q_actions" rows="2"></textarea></label>
+        </fieldset>
+        <div class="report-head">
+          <span data-i18n="field.report">Compte rendu généré (modifiable)</span>
+          <button type="button" class="btn ghost" id="btn-pdf-preview" data-i18n="btn.pdf">Télécharger PDF</button>
+        </div>
+        <textarea name="compteRendu" id="visite-cr" rows="12"></textarea>
+        <menu>
+          <button value="cancel" type="button" class="btn ghost" id="btn-annuler-visite" data-i18n="btn.cancel">Annuler</button>
+          <button value="save" class="btn primary" data-i18n="btn.save">Enregistrer</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="dialog-visite-view" class="wide">
+      <h2 id="visite-view-title">Compte rendu</h2>
+      <div id="visite-view-body"></div>
+      <menu>
+        <button type="button" class="btn ghost" id="btn-fermer-visite-view" data-i18n="btn.close">Fermer</button>
+        <button type="button" class="btn ghost" id="btn-pdf-visite-view" data-i18n="btn.pdf">Télécharger PDF</button>
+      </menu>
+    </dialog>
+
+    <dialog id="dialog-photo-view">
+      <img id="photo-view-img" alt="" />
+      <menu>
+        <button type="button" class="btn ghost" id="btn-fermer-photo-view" data-i18n="btn.close">Fermer</button>
+      </menu>
+    </dialog>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+        if (window.caches) caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+      }
+    </script>
+    <script src="./app.js?v=51" type="module"></script>
+  </body>
+</html>

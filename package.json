@@ -1,0 +1,13 @@
+{
+  "name": "buildeo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Buildeo — gestion de chantiers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
